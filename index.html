@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSI Student Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>HSI STUDENT MANAGEMENT</h1>
+            <p>Student CRUD sederhana dengan JavaScript</p>
+        </header>
+
+        <section class="stats">
+            <div class="stat-card">
+                <h3>Total Siswa</h3>
+                <p id="totalStudents">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Rata-rata Nilai</h3>
+                <p id="averageScore">0</p>
+            </div>
+        </section>
+
+        <section class="form-card">
+            <h2 id="formTitle">Tambah Siswa</h2>
+
+            <form id="studentForm">
+                <label for="studentName">Nama Siswa</label>
+                <input
+                    type="text"
+                    id="studentName"
+                    placeholder="Masukkan nama siswa"
+                    required
+                >
+
+                <label for="studentScore">Nilai</label>
+                <input
+                    type="number"
+                    id="studentScore"
+                    placeholder="Masukkan nilai 0-100"
+                    min="0"
+                    max="100"
+                    required
+                >
+
+                <div class="form-buttons">
+                    <button type="submit" id="submitButton">➕ Tambah Siswa</button>
+                    <button type="button" id="cancelButton" class="cancel-button">
+                        ❌ Batal
+                    </button>
+                </div>
+            </form>
+
+            <div id="alertMessage"></div>
+        </section>
+
+        <section class="list-card">
+            <h2>📋 Daftar Siswa</h2>
+            <div id="studentList"></div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
