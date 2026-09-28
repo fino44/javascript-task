@@ -3,67 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Explorer</title>
+    <title>HSI Student Management</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header class="header">
-        <div class="container">
-            <h1>FIN-SHOP</h1>
-            <p>Jelajahi berbagai product dari FIN-SHOP</p>
-        </div>
-    </header>
+    <div class="container">
+        <header>
+            <h1>HSI STUDENT MANAGEMENT</h1>
+            <p>Student CRUD sederhana dengan JavaScript</p>
+        </header>
 
-    <main class="container">
-        <section class="controls">
-            <div class="control-group search-group">
-                <label for="searchInput">Cari Product</label>
-                <input type="text" id="searchInput" placeholder="Cari nama product...">
+        <section class="stats">
+            <div class="stat-card">
+                <h3>Total Siswa</h3>
+                <p id="totalStudents">0</p>
             </div>
 
-            <div class="control-group">
-                <label for="categorySelect">Category</label>
-                <select id="categorySelect">
-                    <option value="all">Semua kategori</option>
-                </select>
+            <div class="stat-card">
+                <h3>Rata-rata Nilai</h3>
+                <p id="averageScore">0</p>
             </div>
-
-            <div class="control-group">
-                <label for="sortSelect">Sorting</label>
-                <select id="sortSelect">
-                    <option value="default">Default</option>
-                    <option value="price-low">Harga Terendah</option>
-                    <option value="price-high">Harga Tertinggi</option>
-                    <option value="rating-high">Rating Tertinggi</option>
-                    <option value="name-az">Nama A - Z</option>
-                </select>
-            </div>
-
-            <button id="resetButton" class="reset-button">Reset Filter</button>
         </section>
 
-        <div class="result-info">
-            <p id="productCounter">Memuat product...</p>
-        </div>
+        <section class="form-card">
+            <h2 id="formTitle">Tambah Siswa</h2>
 
-        <div id="loading" class="message">
-            <p>Loading product...</p>
-        </div>
+            <form id="studentForm">
+                <label for="studentName">Nama Siswa</label>
+                <input
+                    type="text"
+                    id="studentName"
+                    placeholder="Masukkan nama siswa"
+                    required
+                >
 
-        <div id="error" class="message error-message hidden">
-            <p>Gagal mengambil data product. Silakan coba lagi.</p>
-            <button id="retryButton">Coba Lagi</button>
-        </div>
+                <label for="studentScore">Nilai</label>
+                <input
+                    type="number"
+                    id="studentScore"
+                    placeholder="Masukkan nilai 0-100"
+                    min="0"
+                    max="100"
+                    required
+                >
 
-        <section id="productGrid" class="product-grid"></section>
-    </main>
+                <div class="form-buttons">
+                    <button type="submit" id="submitButton">➕ Tambah Siswa</button>
+                    <button type="button" id="cancelButton" class="cancel-button">
+                        ❌ Batal
+                    </button>
+                </div>
+            </form>
 
-    <div id="detailModal" class="modal hidden">
-        <div class="modal-content">
-            <button id="closeModal" class="close-button">&times;</button>
-            <div id="modalBody"></div>
-        </div>
+            <div id="alertMessage"></div>
+        </section>
+
+        <section class="list-card">
+            <h2>📋 Daftar Siswa</h2>
+            <div id="studentList"></div>
+        </section>
     </div>
 
     <script src="script.js"></script>

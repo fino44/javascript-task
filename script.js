@@ -1,226 +1,276 @@
-const API_URL = "https://dummyjson.com/products";
+// ===============================
+// DATA STUDENT
+// ===============================
 
-let products = [];
+// Ambil data dari LocalStorage.
+// Jika belum ada data, gunakan array kosong.
+let students = JSON.parse(localStorage.getItem("students")) || [];
 
-// Ambil elemen HTML
-const searchInput = document.getElementById("searchInput");
-const categorySelect = document.getElementById("categorySelect");
-const sortSelect = document.getElementById("sortSelect");
-const resetButton = document.getElementById("resetButton");
-const productCounter = document.getElementById("productCounter");
-const productGrid = document.getElementById("productGrid");
-const loading = document.getElementById("loading");
-const error = document.getElementById("error");
-const retryButton = document.getElementById("retryButton");
-const detailModal = document.getElementById("detailModal");
-const closeModal = document.getElementById("closeModal");
-const modalBody = document.getElementById("modalBody");
+// Menyimpan id siswa yang sedang diedit.
+// Nilai null berarti sedang dalam mode tambah.
+let editingId = null;
 
-// Mengambil data dari API
-async function getProducts() {
-    loading.classList.remove("hidden");
-    error.classList.add("hidden");
-    productGrid.innerHTML = "";
 
-    try {
-        const response = await fetch(API_URL);
+// ===============================
+// AMBIL ELEMENT HTML
+// ===============================
 
-        if (!response.ok) {
-            throw new Error("Gagal mengambil data");
-        }
+const studentForm = document.getElementById("studentForm");
+const studentName = document.getElementById("studentName");
+const studentScore = document.getElementById("studentScore");
 
-        const data = await response.json();
-        products = data.products;
+const studentList = document.getElementById("studentList");
+const totalStudents = document.getElementById("totalStudents");
+const averageScore = document.getElementById("averageScore");
 
-        createCategoryOptions();
-        showProducts();
+const submitButton = document.getElementById("submitButton");
+const cancelButton = document.getElementById("cancelButton");
 
-    } catch (err) {
-        console.error(err);
-        error.classList.remove("hidden");
-        productCounter.textContent = "Product tidak dapat ditampilkan.";
-    } finally {
-        loading.classList.add("hidden");
-    }
+const formTitle = document.getElementById("formTitle");
+const alertMessage = document.getElementById("alertMessage");
+
+
+// ===============================
+// LOCALSTORAGE
+// ===============================
+
+function saveStudents() {
+    localStorage.setItem("students", JSON.stringify(students));
 }
 
-// Membuat pilihan category secara otomatis
-function createCategoryOptions() {
-    categorySelect.innerHTML = '<option value="all">Semua kategori</option>';
 
-    const categories = [];
+// ===============================
+// ALERT / PESAN
+// ===============================
 
-    products.forEach(function(product) {
-        if (!categories.includes(product.category)) {
-            categories.push(product.category);
-        }
-    });
+function showAlert(message) {
+    alertMessage.innerHTML = `<div class="alert">${message}</div>`;
 
-    categories.sort();
-
-    categories.forEach(function(category) {
-        const option = document.createElement("option");
-        option.value = category;
-        option.textContent = category;
-        categorySelect.appendChild(option);
-    });
+    // Bonus: pesan hilang setelah 3 detik
+    setTimeout(function () {
+        alertMessage.innerHTML = "";
+    }, 3000);
 }
 
-// Menampilkan product sesuai search, category, dan sorting
-function showProducts() {
-    const searchText = searchInput.value.toLowerCase();
-    const selectedCategory = categorySelect.value;
-    const selectedSort = sortSelect.value;
 
-    let filteredProducts = products.filter(function(product) {
-        const matchSearch = product.title.toLowerCase().includes(searchText);
+// ===============================
+// RENDER STUDENT
+// ===============================
 
-        const matchCategory =
-            selectedCategory === "all" ||
-            product.category === selectedCategory;
+function renderStudents() {
+    studentList.innerHTML = "";
 
-        return matchSearch && matchCategory;
-    });
-
-    // Sorting
-    if (selectedSort === "price-low") {
-        filteredProducts.sort(function(a, b) {
-            return a.price - b.price;
-        });
-    } else if (selectedSort === "price-high") {
-        filteredProducts.sort(function(a, b) {
-            return b.price - a.price;
-        });
-    } else if (selectedSort === "rating-high") {
-        filteredProducts.sort(function(a, b) {
-            return b.rating - a.rating;
-        });
-    } else if (selectedSort === "name-az") {
-        filteredProducts.sort(function(a, b) {
-            return a.title.localeCompare(b.title);
-        });
-    }
-
-    renderProducts(filteredProducts);
-
-    productCounter.textContent =
-        `${filteredProducts.length} dari ${products.length} product ditampilkan.`;
-}
-
-// Membuat product card
-function renderProducts(productList) {
-    productGrid.innerHTML = "";
-
-    if (productList.length === 0) {
-        productGrid.innerHTML = `
-            <div class="message" style="grid-column: 1 / -1;">
-                Product tidak ditemukan.
-            </div>
-        `;
+    if (students.length === 0) {
+        studentList.innerHTML = `<p class="empty">Belum ada data siswa.</p>`;
+        updateStatistics();
         return;
     }
 
-    productList.forEach(function(product) {
-        const card = document.createElement("div");
-        card.className = "product-card";
+    for (let i = 0; i < students.length; i++) {
+        const student = students[i];
 
-        card.innerHTML = `
-            <img src="${product.thumbnail}" alt="${product.title}">
-            <div class="product-info">
-                <h3>${product.title}</h3>
-                <p class="category">Category: ${product.category}</p>
-                <p class="price">$${product.price}</p>
-                <p class="rating">⭐ ${product.rating}</p>
-                <button class="detail-button" onclick="showDetail(${product.id})">
-                    Lihat Detail
+        const studentItem = document.createElement("div");
+        studentItem.className = "student-item";
+
+        studentItem.innerHTML = `
+            <div class="student-info">
+                <h3>${i + 1}. ${student.name}</h3>
+                <p>Nilai: ${student.score}</p>
+            </div>
+
+            <div class="student-buttons">
+                <button class="edit-button" onclick="editStudent(${student.id})">
+                    ✏️ Ubah
+                </button>
+
+                <button class="delete-button" onclick="deleteStudent(${student.id})">
+                    🗑️ Hapus
                 </button>
             </div>
         `;
 
-        productGrid.appendChild(card);
-    });
+        studentList.appendChild(studentItem);
+    }
+
+    updateStatistics();
 }
 
-// Menampilkan detail product dalam modal
-function showDetail(productId) {
-    const product = products.find(function(item) {
-        return item.id === productId;
-    });
 
-    if (!product) {
+// ===============================
+// STATISTIK
+// ===============================
+
+function updateStatistics() {
+    totalStudents.textContent = students.length;
+
+    if (students.length === 0) {
+        averageScore.textContent = "0";
         return;
     }
 
-    modalBody.innerHTML = `
-        <div class="modal-product">
-            <img src="${product.thumbnail}" alt="${product.title}">
-            <div class="modal-info">
-                <h2>${product.title}</h2>
-                <p><strong>Category:</strong> ${product.category}</p>
-                <p><strong>Description:</strong> ${product.description}</p>
-                <p class="modal-price">$${product.price}</p>
-                <p><strong>Rating:</strong> ⭐ ${product.rating}</p>
-                <p><strong>Stock:</strong> ${product.stock}</p>
-                <p><strong>Brand:</strong> ${product.brand || "Tidak tersedia"}</p>
-            </div>
-        </div>
-    `;
+    let totalScore = 0;
 
-    detailModal.classList.remove("hidden");
+    for (let i = 0; i < students.length; i++) {
+        totalScore += Number(students[i].score);
+    }
+
+    const average = totalScore / students.length;
+
+    averageScore.textContent = average.toFixed(2);
 }
 
-// Tutup modal
-function closeDetailModal() {
-    detailModal.classList.add("hidden");
+
+// ===============================
+// ADD / UPDATE STUDENT
+// ===============================
+
+studentForm.addEventListener("submit", function (event) {
+    // Mencegah halaman melakukan refresh
+    event.preventDefault();
+
+    const name = studentName.value.trim();
+    const score = Number(studentScore.value);
+
+    // Validasi nama
+    if (name === "") {
+        alert("Nama siswa harus diisi.");
+        return;
+    }
+
+    // Validasi nilai
+    if (score < 0 || score > 100 || studentScore.value === "") {
+        alert("Nilai harus berada di antara 0 sampai 100.");
+        return;
+    }
+
+    // Jika editingId masih null, berarti tambah siswa
+    if (editingId === null) {
+        const newStudent = {
+            id: Date.now(),
+            name: name,
+            score: score
+        };
+
+        students.push(newStudent);
+
+        saveStudents();
+        renderStudents();
+
+        showAlert(`✅ Data siswa ${name} berhasil ditambahkan.`);
+
+    } else {
+        // Jika editingId tidak null, berarti update siswa
+        for (let i = 0; i < students.length; i++) {
+            if (students[i].id === editingId) {
+                students[i].name = name;
+                students[i].score = score;
+                break;
+            }
+        }
+
+        saveStudents();
+        renderStudents();
+
+        showAlert(`🔄 Data siswa ${name} berhasil diperbarui.`);
+    }
+
+    resetForm();
+});
+
+
+// ===============================
+// EDIT STUDENT
+// ===============================
+
+function editStudent(id) {
+    for (let i = 0; i < students.length; i++) {
+        if (students[i].id === id) {
+            studentName.value = students[i].name;
+            studentScore.value = students[i].score;
+
+            editingId = id;
+
+            formTitle.textContent = "Edit Siswa";
+            submitButton.textContent = "💾 Update Siswa";
+            cancelButton.style.display = "block";
+
+            // Scroll ke form agar mudah diedit
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+
+            break;
+        }
+    }
 }
 
-// Event Search
-searchInput.addEventListener("input", function() {
-    showProducts();
-});
 
-// Event Category
-categorySelect.addEventListener("change", function() {
-    showProducts();
-});
+// ===============================
+// DELETE STUDENT
+// ===============================
 
-// Event Sorting
-sortSelect.addEventListener("change", function() {
-    showProducts();
-});
+function deleteStudent(id) {
+    let studentNameToDelete = "";
 
-// Event Reset
-resetButton.addEventListener("click", function() {
-    searchInput.value = "";
-    categorySelect.value = "all";
-    sortSelect.value = "default";
-
-    showProducts();
-});
-
-// Event tutup modal
-closeModal.addEventListener("click", function() {
-    closeDetailModal();
-});
-
-// Bonus: tutup modal dengan klik area luar
-detailModal.addEventListener("click", function(event) {
-    if (event.target === detailModal) {
-        closeDetailModal();
+    // Cari nama siswa berdasarkan id
+    for (let i = 0; i < students.length; i++) {
+        if (students[i].id === id) {
+            studentNameToDelete = students[i].name;
+            break;
+        }
     }
-});
 
-// Bonus: tutup modal dengan tombol Escape
-document.addEventListener("keydown", function(event) {
-    if (event.key === "Escape") {
-        closeDetailModal();
+    // Confirm sebelum menghapus
+    const confirmation = confirm(
+        `Apakah kamu yakin ingin menghapus siswa ${studentNameToDelete}?`
+    );
+
+    // Jika Cancel, jangan lakukan apa-apa
+    if (!confirmation) {
+        return;
     }
+
+    // Hapus student berdasarkan id
+    students = students.filter(function (student) {
+        return student.id !== id;
+    });
+
+    saveStudents();
+    renderStudents();
+
+    showAlert(`🗑️ Data siswa ${studentNameToDelete} berhasil dihapus.`);
+
+    // Jika siswa yang dihapus sedang diedit
+    if (editingId === id) {
+        resetForm();
+    }
+}
+
+
+// ===============================
+// RESET FORM
+// ===============================
+
+function resetForm() {
+    studentForm.reset();
+
+    editingId = null;
+
+    formTitle.textContent = "Tambah Siswa";
+    submitButton.textContent = "➕ Tambah Siswa";
+    cancelButton.style.display = "none";
+}
+
+
+// Tombol Batal Edit
+cancelButton.addEventListener("click", function () {
+    resetForm();
 });
 
-// Tombol coba lagi jika API error
-retryButton.addEventListener("click", function() {
-    getProducts();
-});
 
-// Jalankan aplikasi
-getProducts();
+// ===============================
+// PROGRAM DIJALANKAN SAAT HALAMAN DIBUKA
+// ===============================
+
+renderStudents();
